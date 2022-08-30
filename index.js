@@ -1,4 +1,4 @@
-const minuteTarget = 27; // den skal være 17 minutter over
+const minuteTarget = 17; // den skal være 17 minutter over
 
 function updateTime() {
     var now = new Date();
@@ -10,11 +10,11 @@ function updateTime() {
 
     var message;
     if (diff == 0) {
-        message = "Nu er der rave med de hårde drenge!";
+        message = "Nu er det Mad-Mickey tid!";
     }
     else {
         let pluralSuffix = (diff == 1) ? "" : "ter";
-        message = `Der er ${diff} minut${pluralSuffix} til rave!`;
+        message = `Der er ${diff} minut${pluralSuffix} til Mad Mickey!`;
     }
 
     function toClockSegment(t) {
