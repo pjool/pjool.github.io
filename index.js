@@ -1,6 +1,6 @@
 //target time (in local time)
 const targetHours = 20;
-const targetMinutes = 17;
+const targetMinutes = 23;
 
 //target time in seconds
 const timePerDay = 24 * 60 * 60 * 1000
@@ -35,9 +35,8 @@ const timeZones = [
     ["Asia/Rangoon", 23400, 6.5, "i Myanmar"],
     ["Asia/Saigon", 25200, 7, "i Vietnam"],
     ["Asia/Singapore", 28800, 8, "i Singapore"],
-    ["Asia/Pyongyang", 30600, 8.5, "i Nordkorea"],
     ["Australia/Eucla", 31500, 8.75, "i Eucla"],
-    ["Japan", 32400, 9, "i Japan"],
+    ["Japan", 32400, 9, "i Nordkorea"],
     ["Australia/North", 34200, 9.5, "i Darwin"],
     ["Australia/Sydney", 36000, 10, "i Sydney"],
     ["Australia/Lord_Howe", 37800, 10.5, "på Lord Howe Island"],
@@ -46,57 +45,59 @@ const timeZones = [
     ["Pacific/Chatham", 45900, 12.75, "på Chathamøerne"]
 ]
 
+let remainingPartyTime = -1;
+let message = "";
 
 function updateTime() {
 
     function toClockSegment(t) {
         return t.toString().padStart(2, "0");
     }
-    
+    //get local time
     let localTime = new Date();
     let hours = localTime.getHours();
     let minutes = localTime.getMinutes();
     let seconds = localTime.getSeconds();
+    // convert to clock
+    let timeString = toClockSegment(hours) + "." + toClockSegment(minutes) + ":" + toClockSegment(seconds);
 
-    let utcTime = new Date().getTime() % timePerDay; //get UTC time and convert to secodns
-
-    //find next time zone
-    let minDiff = Infinity;
-    let nextZone = -1;
-
-    for (let i = 0; i < timeZones.length; i++) {
-        let zone = timeZones[i];
-        let diff = (targetTime - (utcTime + zone[1]*1000) + timePerDay) % timePerDay;
-        if (diff < minDiff) {
-            minDiff = diff;
-            nextZone = i;
-        }
-    }
-
-    console.log(timeZones[nextZone][0]);
-
-    let diffInSeconds = Math.floor(minDiff / 1000);
-
-    let message;
-    if (diffInSeconds <= 60) {
-        message = "Nu er det Mad-Mickey tid!";
+    //update clock if partytime
+    if (remainingPartyTime >= 0) {
+        
+        remainingPartyTime -= 1;
     }
     else {
-        let location = timeZones[nextZone][3];
-        //diff = (diffInSeconds - minutes + 60 ) % 60;
-        let s = diffInSeconds % 60;
-        let m = Math.floor(diffInSeconds / 60)
-        let pluralSuffix = (diffInSeconds == 1) ? "" : "ter";
-        message = `Der er ${toClockSegment(m)}:${toClockSegment(s)} minut${pluralSuffix} til Mad Mickey ${location}!`;
+        let utcTime = new Date().getTime() % timePerDay; //get UTC time and convert to secodns
+
+        //find next time zone
+        let minDiff = Infinity;
+        let nextZone = -1;
+
+        for (let i = 0; i < timeZones.length; i++) {
+            let zone = timeZones[i];
+            let diff = (targetTime - (utcTime + zone[1]*1000) + timePerDay) % timePerDay;
+            if (diff < minDiff) {
+                minDiff = diff;
+                nextZone = i;
+            }
+        }
+
+        console.log(timeZones[nextZone][0]);
+
+        let diffInSeconds = Math.ceil(minDiff / 1000);
+        
+        if (diffInSeconds == 1) {
+            remainingPartyTime = 60;
+            message = "Nu er det Mad-Mickey tid!";
+        }
+        else {
+            let location = timeZones[nextZone][3];
+            let s = diffInSeconds % 60;
+            let m = Math.floor(diffInSeconds / 60)
+            message = `Der er ${toClockSegment(m)}:${toClockSegment(s)} til Mad Mickey ${location}!`;
+        }
     }
-
-    // convert to clock
-
-
-
-   
-
-    let timeString = toClockSegment(hours) + "." + toClockSegment(minutes) + ":" + toClockSegment(seconds);
+    
     document.getElementById("clock").innerHTML = timeString;
     document.getElementById("diff").innerHTML = message;
 }
