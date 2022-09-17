@@ -1,6 +1,6 @@
 //target time (in local time)
 const targetHours = 20;
-const targetMinutes = 23;
+const targetMinutes = 17;
 
 //target time in seconds
 const timePerDay = 24 * 60 * 60 * 1000
@@ -30,7 +30,7 @@ const timeZones = [
     ["Asia/Kabul", 16200, 4.5, "i Afghanistan"],
     ["Asia/Ashgabat", 18000, 5, "i Turkmenistan"],
     ["Asia/Calcutta", 19800, 5.5, "i Indien"],
-    ["Asia/Kathmandu", 20700, 5.75, "i Nepal"],
+    ["Asia/Kathmandu", 20700, 5.75, "i Tibet"],
     ["Asia/Dhaka", 21600, 6, "i Bangladesh"],
     ["Asia/Rangoon", 23400, 6.5, "i Myanmar"],
     ["Asia/Saigon", 25200, 7, "i Vietnam"],
@@ -44,9 +44,64 @@ const timeZones = [
     ["Antarctica/South_Pole", 43200, 12, "på Sydpolen"],
     ["Pacific/Chatham", 45900, 12.75, "på Chathamøerne"]
 ]
+// get youtube api
+let tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+let firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-let remainingPartyTime = -1;
+let player;
+let youtubeAPIReady = false;
+function onYouTubeIframeAPIReady() {
+    youtubeAPIReady = true;
+}
+
+// 4. The API will call this function when the video player is ready.
+function onPlayerReady(event) {
+    event.target.playVideo();
+}
+
+// 5. The API calls this function when the player's state changes.
+//    The function indicates that when playing a video (state=1),
+//    the player should play for six seconds and then stop.
+var done = false;
+function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.ENDED) {
+        stopParty();
+}
+}
+function stopVideo() {
+    player.stopVideo();
+    player.destroy();
+}
+
+function showVideo() {
+    if (youtubeAPIReady) {
+        player = new YT.Player('player', {
+            height: '390',
+            width: '640',
+            videoId: '6HHBaVYcgp8',
+            playerVars: {
+            'playsinline': 1,
+            'autoplay': 1
+        
+            },
+            events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+}
+
+
 let message = "";
+let nextLocation = "";
+let partyTime = false;
+
+let diffSpan = document.getElementById("diff");
+let clockSpan = document.getElementById("clock");
+let mainDiv = document.getElementById("main")
 
 function updateTime() {
 
@@ -61,12 +116,7 @@ function updateTime() {
     // convert to clock
     let timeString = toClockSegment(hours) + "." + toClockSegment(minutes) + ":" + toClockSegment(seconds);
 
-    //update clock if partytime
-    if (remainingPartyTime >= 0) {
-        
-        remainingPartyTime -= 1;
-    }
-    else {
+    if (!partyTime) {
         let utcTime = new Date().getTime() % timePerDay; //get UTC time and convert to secodns
 
         //find next time zone
@@ -82,24 +132,36 @@ function updateTime() {
             }
         }
 
-        console.log(timeZones[nextZone][0]);
-
         let diffInSeconds = Math.ceil(minDiff / 1000);
         
         if (diffInSeconds == 1) {
-            remainingPartyTime = 60;
-            message = "Nu er det Mad-Mickey tid!";
+            startParty();
         }
         else {
-            let location = timeZones[nextZone][3];
+            nextLocation = timeZones[nextZone][3];
             let s = diffInSeconds % 60;
             let m = Math.floor(diffInSeconds / 60)
-            message = `Der er ${toClockSegment(m)}:${toClockSegment(s)} til Mad Mickey ${location}!`;
+            message = `Der er ${toClockSegment(m)}:${toClockSegment(s)} til Mad Mickey ${nextLocation}!`;
         }
     }
     
-    document.getElementById("clock").innerHTML = timeString;
-    document.getElementById("diff").innerHTML = message;
+    clockSpan.innerHTML = timeString;
+    diffSpan.innerHTML = message;
+}
+
+function startParty() {
+    partyTime = true;
+    message = `Nu er det Mad-Mickey-tid ${nextLocation}!`;
+    showVideo();
+    mainDiv.classList.add('rainbow_text_animated');
+    diffSpan.classList.add('bold');
+}
+
+function stopParty() {
+    partyTime = false
+    stopVideo();
+    mainDiv.classList.remove('rainbow_text_animated');
+    diffSpan.classList.remove('bold');
 }
 
 
